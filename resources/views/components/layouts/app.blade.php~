@@ -12,9 +12,6 @@
         @livewireScripts
     </head>
     <body>
-        <x-header />
-        <div class="mt-18">
-            {{ $slot }}
-        </div>
+        {{ $slot }}
     </body>
 </html>

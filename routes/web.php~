@@ -6,4 +6,4 @@ use Illuminate\Support\Facades\Route;
 Route::get('/tic-tac-toe', TicTacToe::class)
     ->name('tic-tac-toe');
 
-Route::view('/', 'welcome')->name('welcome');
+Route::view('/tic-tac-toe', 'welcome')->name('tic-tac-toe');

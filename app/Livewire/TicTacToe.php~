@@ -94,7 +94,6 @@ class TicTacToe extends Component
     public function newGame(): void
     {
         $this->mount();
-        $this->dispatch('new-game');
         // Save game in database
     }
 }
