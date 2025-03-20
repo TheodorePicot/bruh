@@ -1,3 +1,7 @@
 .primary-button {
     @apply bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover cursor-pointer;
 }
+
+.secondary-button {
+    @apply bg-secondary text-primary px-4 py-2 rounded-md border-2 border-primary hover:bg-primary/10 cursor-pointer;
+}

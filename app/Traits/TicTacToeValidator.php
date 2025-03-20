@@ -6,18 +6,23 @@ use Illuminate\Validation\ValidationException;
 
 trait TicTacToeValidator
 {
-    public $playerCounts = [
-        1 => [
-            'rows' => [0, 0, 0],
-            'columns' => [0, 0, 0],
-            'diags' => [0, 0]
-        ],
-        2 => [
-            'rows' => [0, 0, 0],
-            'columns' => [0, 0, 0],
-            'diags' => [0, 0]
-        ]
-    ];
+    public array $playerCounts;
+
+    private function setUpPlayerCounts(): void
+    {
+        $this->playerCounts = [
+            1 => [
+                'rows' => [0, 0, 0],
+                'columns' => [0, 0, 0],
+                'diags' => [0, 0]
+            ],
+            2 => [
+                'rows' => [0, 0, 0],
+                'columns' => [0, 0, 0],
+                'diags' => [0, 0]
+            ]
+        ];
+    }
 
     /**
      * @throws ValidationException
@@ -25,7 +30,9 @@ trait TicTacToeValidator
     private function validateSelection($i, $j)
     {
         $errors = [];
-        if ($this->currentSelectionIsOutOfBounds($i, $j)) {
+        if ($this->gameOver) {
+            $errors['error'] = "The game is over.";
+        } elseif ($this->currentSelectionIsOutOfBounds($i, $j)) {
             $errors['error'] = "Your selection is out of bounds.";
         } elseif ($this->currentSelectionIsAlreadyPickedByOpponent($i, $j)) {
             $errors['error'] = "You can't pick this cell, it's already been picked by the other player.";
@@ -69,6 +76,10 @@ trait TicTacToeValidator
         return $currentCounts['columns'][$i] == 3
             || $currentCounts['rows'][$j] == 3
             || $currentCounts['diags'][0] == 3 || $currentCounts['diags'][1] == 3;
+    }
 
+    private function noMoreAvailableMoves(): bool
+    {
+        return $this->currentTurn == 9;
     }
 }

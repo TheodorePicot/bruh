@@ -5,6 +5,7 @@
 @php
     $buttonClasses = [
         'primary' => 'primary-button',
+        'secondary' => 'secondary-button',
     ]
 
 @endphp

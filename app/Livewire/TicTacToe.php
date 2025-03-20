@@ -14,9 +14,19 @@ class TicTacToe extends Component
 
     public array $ticTacToeMatrix;
 
-    public int $currentPlayer = 1;
+    public array $reviewMatrix;
 
-    public bool $gameOver = false;
+    public array $moves;
+
+    public int $currentPlayer;
+
+    public bool $gameOver;
+
+    public int $currentTurn;
+
+    public int $reviewTurn;
+
+    public bool $reviewing;
 
     public function mount()
     {
@@ -26,8 +36,15 @@ class TicTacToe extends Component
             [0, 0, 0],
         ];
 
-       $this->currentPlayer = 1;
-       $this->gameOver = false;
+        $this->reviewMatrix = $this->ticTacToeMatrix;
+
+        $this->moves = [];
+
+        $this->currentPlayer = 1;
+        $this->currentTurn = 0;
+        $this->gameOver = false;
+        $this->reviewing = false;
+        $this->setUpPlayerCounts();
     }
 
     /**
@@ -38,24 +55,30 @@ class TicTacToe extends Component
      */
     public function checkCell(int $i, int $j): void
     {
-        if ($this->gameOver) {
-            return;
-        }
-
         $this->validateSelection($i, $j);
 
         $this->ticTacToeMatrix[$i][$j] = $this->currentPlayer;
+        $this->incrementTurn();
         $this->updateCurrentPlayerCounts($i, $j);
+        $this->moves[] = [$i, $j];
 
         if ($this->currentPlayerHasWon($i, $j)) {
-            $this->dispatch('current-player-won');
-            $this->gameOver = true;
-            return;
+            $this->endGame('current-player-won');
+        } elseif ($this->noMoreAvailableMoves()) {
+            $this->endGame('no-more-moves');
         }
 
         $this->changePlayer();
     }
 
+    private function endGame($dispatchName): void
+    {
+        $this->dispatch($dispatchName);
+        $this->gameOver = true;
+        $this->reviewTurn = $this->currentTurn;
+        $this->reviewMatrix = $this->ticTacToeMatrix;
+        // save Game in db
+    }
     /**
      * Changes the current player to the other player when his round is done.
      * @return void
@@ -66,6 +89,11 @@ class TicTacToe extends Component
         else $this->currentPlayer = 1;
     }
 
+    private function incrementTurn(): void
+    {
+        $this->currentTurn++;
+    }
+
     /**
      * Returns true if the current selection is already picked by the player 1
      *
@@ -73,8 +101,9 @@ class TicTacToe extends Component
      * @param $j int the line index
      * @return bool
      */
-    public function isSelectedByUserOne(int $i, int $j): bool
+    public function isSelectedByUserOne(int $i, int $j, bool $reviewing = false): bool
     {
+        if ($reviewing) return $this->reviewMatrix[$i][$j] === 1;
         return $this->ticTacToeMatrix[$i][$j] === 1;
     }
 
@@ -86,15 +115,37 @@ class TicTacToe extends Component
      * @param $j int the line index
      * @return bool
      */
-    public function isSelectedByUserTwo(int $i, int $j): bool
+    public function isSelectedByUserTwo(int $i, int $j, bool $reviewing = false): bool
     {
+        if ($reviewing) return $this->reviewMatrix[$i][$j] === 2;
         return $this->ticTacToeMatrix[$i][$j] === 2;
     }
 
     public function newGame(): void
     {
         $this->mount();
-        $this->dispatch('new-game');
-        // Save game in database
+    }
+
+    public function previousRound(): void
+    {
+        if ($this->reviewTurn == 0) return;
+        $this->reviewTurn--;
+        $move = $this->moves[$this->reviewTurn];
+        $this->reviewMatrix[$move[0]][$move[1]] = 0;
+    }
+
+    public function nextRound(): void
+    {
+        if ($this->reviewTurn == $this->currentTurn) return;
+        $move = $this->moves[$this->reviewTurn];
+        if ($this->reviewTurn % 2 == 0) $this->reviewMatrix[$move[0]][$move[1]] = 1;
+        else $this->reviewMatrix[$move[0]][$move[1]] = 2;
+        $this->reviewTurn++;
+    }
+
+    public function resetReview(): void
+    {
+        $this->reviewTurn = $this->currentTurn;
+        $this->reviewMatrix = $this->ticTacToeMatrix;
     }
 }
